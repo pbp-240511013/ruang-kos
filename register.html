@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Akun | RuangKos</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        body {
+            background: #f8f5f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #51463d;
+        }
+
+        .register-container {
+            background: white;
+            width: 100%;
+            max-width: 430px;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0 8px 30px rgba(90, 70, 50, 0.08);
+        }
+
+        .register-container h1 {
+            font-family: Georgia, serif;
+            color: #765c48;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .register-description {
+            text-align: center;
+            color: #9b8979;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 17px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #e4d8cd;
+            border-radius: 8px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            border-color: #a77b65;
+        }
+
+        .register-button {
+            width: 100%;
+            padding: 13px;
+            background: #a77b65;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            margin-top: 8px;
+        }
+
+        .register-button:hover {
+            background: #89634f;
+        }
+
+        .register-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #pesan {
+            font-size: 14px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #a77b65;
+            font-weight: bold;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="register-container">
+
+        <h1>Bergabung dengan RuangKos</h1>
+
+        <p class="register-description">
+            Buat akun untuk mengakses layanan RuangKos.
+        </p>
+
+        <form id="registerForm">
+
+            <div class="form-group">
+                <label for="nama">Nama Lengkap</label>
+                <input
+                    type="text"
+                    id="nama"
+                    placeholder="Masukkan nama lengkap"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Masukkan email aktif"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Minimal 6 karakter"
+                    minlength="6"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="konfirmasiPassword">Konfirmasi Password</label>
+                <input
+                    type="password"
+                    id="konfirmasiPassword"
+                    placeholder="Ulangi password"
+                    minlength="6"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="register-button" id="registerButton">
+                Daftar Sekarang
+            </button>
+
+            <p id="pesan"></p>
+
+        </form>
+
+        <p class="login-link">
+            Sudah punya akun?
+            <a href="login.html">Login di sini</a>
+        </p>
+
+    </main>
+
+    <script type="module" src="register.js"></script>
+
+</body>
+</html>

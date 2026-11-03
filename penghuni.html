@@ -1,0 +1,221 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Penghuni | RuangKos</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        body {
+            background: #f8f5f0;
+            color: #51463d;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .navbar {
+            background: white;
+            padding: 18px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,.04);
+        }
+        .logo {
+            color: #765c48;
+            font-family: Georgia, serif;
+            font-size: 25px;
+            font-weight: bold;
+        }
+        .logout-button, .upload-button {
+            background: #a77b65;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .upload-button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+        .welcome { margin-bottom: 25px; }
+        .welcome h1 {
+            color: #765c48;
+            font-family: Georgia, serif;
+        }
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 5px 20px rgba(90,70,50,.05);
+            margin-bottom: 22px;
+        }
+        .card h2 {
+            color: #765c48;
+            font-size: 19px;
+            margin-top: 0;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+        .info-item {
+            background: #faf7f3;
+            padding: 15px;
+            border-radius: 9px;
+        }
+        .info-item small {
+            display: block;
+            color: #9b8979;
+            margin-bottom: 7px;
+        }
+        .info-item strong {
+            color: #51463d;
+            overflow-wrap: anywhere;
+        }
+        .table-wrapper { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+        th, td {
+            padding: 13px;
+            border-bottom: 1px solid #eee7df;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            color: #765c48;
+            background: #faf7f3;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 11px;
+            border-radius: 20px;
+            background: #f2eadf;
+            color: #765c48;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .empty-message {
+            background: #faf7f3;
+            padding: 20px;
+            border-radius: 10px;
+            color: #806e5e;
+            line-height: 1.6;
+        }
+        .payment-form {
+            min-width: 230px;
+            display: grid;
+            gap: 8px;
+        }
+        .payment-form select,
+        .payment-form input[type="file"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            border: 1px solid #e5d9ce;
+            border-radius: 7px;
+            background: #fff;
+            color: #51463d;
+        }
+        .payment-form small {
+            color: #806e5e;
+            line-height: 1.4;
+        }
+        .reason {
+            color: #a34b43;
+            font-size: 13px;
+            margin-top: 7px;
+            max-width: 220px;
+            white-space: normal;
+        }
+        .proof-link {
+            color: #765c48;
+            text-decoration: underline;
+        }
+        #pesan { color: #765c48; }
+        @media (max-width: 600px) {
+            .info-grid { grid-template-columns: 1fr; }
+            .navbar { padding: 15px 5%; }
+            .container { margin-top: 25px; }
+            .card { padding: 18px; }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">RuangKos.</div>
+        <button id="logoutButton" class="logout-button">Logout</button>
+    </header>
+
+    <main class="container">
+        <section class="welcome">
+            <h1>Halo, <span id="namaPenghuni">Penghuni</span>!</h1>
+            <p>Selamat datang di dashboard penghuni RuangKos.</p>
+        </section>
+
+        <p id="pesan">Memuat data akun...</p>
+
+        <section class="card">
+            <h2>Informasi Kamar</h2>
+            <div id="informasiKamar">
+                <p>Memuat informasi kamar...</p>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Tagihan dan Pembayaran</h2>
+            <p>Unggah bukti pembayaran agar admin dapat memeriksanya.</p>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bulan Tagihan</th>
+                            <th>Jumlah</th>
+                            <th>Status</th>
+                            <th>Bukti / Catatan</th>
+                            <th>Kirim Pembayaran</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelTagihan">
+                        <tr><td colspan="5">Memuat tagihan...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p id="pesanPembayaran" aria-live="polite"></p>
+        </section>
+
+        <section class="card">
+            <h2>Riwayat Pembayaran</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bulan</th>
+                            <th>Tanggal Bayar</th>
+                            <th>Jumlah</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelPembayaran">
+                        <tr><td colspan="4">Memuat riwayat pembayaran...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="penghuni.js"></script>
+</body>
+</html>

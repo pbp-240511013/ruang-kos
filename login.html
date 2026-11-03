@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Masuk - RuangKos</title>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        body {
+            background: #f8f5f0;
+            min-height: 100vh;
+            color: #51463d;
+        }
+
+        .login-section {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+            box-sizing: border-box;
+        }
+
+        .login-card {
+            background: white;
+            width: 100%;
+            max-width: 430px;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 35px rgba(80, 55, 35, 0.08);
+            box-sizing: border-box;
+        }
+
+        .login-logo {
+            text-align: center;
+            font-family: Georgia, serif;
+            font-size: 25px;
+            font-weight: bold;
+            color: #765c48;
+            margin-bottom: 30px;
+        }
+
+        .login-card h1 {
+            font-family: Georgia, serif;
+            margin-bottom: 10px;
+            color: #765c48;
+            font-size: 28px;
+        }
+
+        .login-description {
+            color: #8b8178;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .login-card label {
+            display: block;
+            margin: 18px 0 8px;
+            font-weight: 600;
+            color: #51463d;
+            font-size: 14px;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #e8ded2;
+            border-radius: 10px;
+            font: inherit;
+            outline: none;
+            box-sizing: border-box;
+            background: #fffdfb;
+        }
+
+        .login-card input:focus {
+            border-color: #92745e;
+        }
+
+        .login-card button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #765c48;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .login-card button:hover {
+            background: #604936;
+        }
+
+        .login-card button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #pesan {
+            margin-top: 18px;
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: #a77b65;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 22px;
+            color: #765c48;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 28px 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <section class="login-section">
+
+        <div class="login-card">
+
+            <div class="login-logo">
+                RuangKos.
+            </div>
+
+            <h1>Selamat Datang!</h1>
+
+            <p class="login-description">
+                Masuk ke akun RuangKos untuk mengelola
+                atau melihat informasi tempat tinggalmu.
+            </p>
+
+            <form id="loginForm">
+
+                <label for="email">Email</label>
+
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Masukkan email"
+                    autocomplete="email"
+                    required
+                >
+
+                <label for="password">Password</label>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Masukkan password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button type="submit" id="loginButton">
+                    Masuk
+                </button>
+
+                <div id="pesan"></div>
+
+            </form>
+
+            <div class="register-link">
+                Belum punya akun?
+                <a href="register.html">Daftar di sini</a>
+            </div>
+
+            <a href="index.html" class="back-link">
+                ← Kembali ke Beranda
+            </a>
+
+        </div>
+
+    </section>
+
+    <script type="module" src="login.js"></script>
+
+</body>
+</html>

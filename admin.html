@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin | RuangKos</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        body {
+            background: #f8f5f0;
+            color: #51463d;
+        }
+
+        .admin-container {
+            max-width: 1150px;
+            margin: 35px auto;
+            padding: 20px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .admin-header h1,
+        .content-card h2 {
+            font-family: Georgia, serif;
+            color: #765c48;
+        }
+
+        .admin-header h1 {
+            margin-bottom: 8px;
+        }
+
+        .logout-button,
+        .save-button {
+            background: #a77b65;
+            color: white;
+            border: none;
+            padding: 11px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .logout-button:hover,
+        .save-button:hover {
+            background: #89634f;
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card,
+        .content-card {
+            background: white;
+            padding: 22px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(90, 70, 50, .06);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: #9b8979;
+            margin-bottom: 12px;
+        }
+
+        .stat-card p {
+            font-size: 28px;
+            font-weight: bold;
+            color: #765c48;
+        }
+
+        .content-card {
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .content-card h2 {
+            margin-bottom: 20px;
+        }
+
+        .room-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .room-form input,
+        .room-form select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e4d8cd;
+            border-radius: 8px;
+            background: #fffdfb;
+            color: #51463d;
+            box-sizing: border-box;
+            font: inherit;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        th, td {
+            padding: 13px;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid #eee6df;
+        }
+
+        th {
+            background: #f7f0e9;
+            color: #765c48;
+            white-space: nowrap;
+        }
+
+        .editKamar,
+        .hapusKamar,
+        .setujuiPembayaran,
+        .tolakPembayaran {
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 2px;
+        }
+
+        .editKamar { background: #b99a78; }
+        .hapusKamar { background: #c97878; }
+        .setujuiPembayaran { background: #668b68; }
+        .tolakPembayaran { background: #c97878; }
+
+        .editKamar:hover { background: #967653; }
+        .hapusKamar:hover,
+        .tolakPembayaran:hover { background: #ad5555; }
+        .setujuiPembayaran:hover { background: #4d704f; }
+
+        .info-text {
+            color: #9b8979;
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 18px;
+        }
+
+        #pesanKamar,
+        #pesanPenetapan,
+        #pesanPembayaran {
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        .bukti-preview {
+            width: 85px;
+            height: 75px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e4d8cd;
+            cursor: pointer;
+        }
+
+        .bukti-link {
+            display: inline-block;
+            color: #8a6048;
+            font-size: 13px;
+            text-decoration: underline;
+        }
+
+        .status-label {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            white-space: nowrap;
+            background: #f2eee9;
+            color: #765c48;
+        }
+
+        .status-menunggu {
+            background: #fff1d6;
+            color: #956b22;
+        }
+
+        .status-lunas {
+            background: #e4f3e5;
+            color: #46734a;
+        }
+
+        .status-ditolak {
+            background: #fbe5e5;
+            color: #a34e4e;
+        }
+
+        .alasan-penolakan {
+            color: #a34e4e;
+            font-size: 12px;
+            margin-top: 5px;
+            max-width: 180px;
+            white-space: normal;
+        }
+
+        .aksi-pembayaran {
+            min-width: 150px;
+        }
+
+        @media (max-width: 600px) {
+            .admin-container {
+                padding: 12px;
+            }
+
+            .admin-header {
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main class="admin-container">
+
+    <header class="admin-header">
+        <div>
+            <h1>Dashboard Admin</h1>
+            <p>Selamat datang di pengelolaan RuangKos!</p>
+        </div>
+
+        <button class="logout-button" id="logoutButton">
+            Logout
+        </button>
+    </header>
+
+    <!-- Statistik -->
+    <section class="stat-grid">
+        <div class="stat-card">
+            <h3>Total Kamar</h3>
+            <p id="totalKamar">0</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Kamar Tersedia</h3>
+            <p id="kamarTersedia">0</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Kamar Terisi</h3>
+            <p id="kamarTerisi">0</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Penghuni</h3>
+            <p id="totalPenghuni">0</p>
+        </div>
+    </section>
+
+    <!-- Tambah Kamar -->
+    <section class="content-card">
+        <h2>Tambah Data Kamar</h2>
+
+        <form id="formKamar">
+            <div class="room-form">
+                <input type="text" id="nomorKamar"
+                    placeholder="Nomor Kamar" required>
+
+                <input type="text" id="tipeKamar"
+                    placeholder="Tipe Kamar" required>
+
+                <input type="number" id="hargaKamar"
+                    placeholder="Harga Bulanan"
+                    min="1" step="1" required>
+
+                <select id="statusKamar" required>
+                    <option value="" disabled selected>
+                        Pilih Status Kamar
+                    </option>
+                    <option value="tersedia">Tersedia</option>
+                    <option value="terisi">Terisi</option>
+                </select>
+            </div>
+
+            <button type="submit" class="save-button">
+                Simpan Kamar
+            </button>
+
+            <p id="pesanKamar"></p>
+        </form>
+    </section>
+
+    <!-- Data Kamar -->
+    <section class="content-card">
+        <h2>Data Kamar</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nomor Kamar</th>
+                        <th>Tipe Kamar</th>
+                        <th>Harga Bulanan</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody id="tabelKamar">
+                    <tr>
+                        <td colspan="5">Memuat data kamar...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Penetapan Kamar -->
+    <section class="content-card">
+        <h2>Penetapan Kamar Penghuni</h2>
+
+        <p class="info-text">
+            Pilih akun penghuni yang sudah mendaftar dan tentukan kamar yang tersedia.
+        </p>
+
+        <form id="formPenetapan">
+            <div class="room-form">
+                <select id="pilihPenghuni" required>
+                    <option value="">Memuat akun penghuni...</option>
+                </select>
+
+                <select id="pilihKamar" required>
+                    <option value="">Memuat kamar tersedia...</option>
+                </select>
+
+                <input type="text" id="noHpPenghuni"
+                    placeholder="Nomor HP">
+
+                <input type="text" id="alamatPenghuni"
+                    placeholder="Alamat penghuni">
+
+                <input type="date" id="tanggalMasuk" required>
+            </div>
+
+            <button type="submit" class="save-button"
+                id="tombolPenetapan">
+                Tetapkan Kamar
+            </button>
+
+            <p id="pesanPenetapan"></p>
+        </form>
+    </section>
+
+    <!-- Kelola Pembayaran -->
+    <section class="content-card">
+        <h2>Kelola Pembayaran</h2>
+
+        <p class="info-text">
+            Buat tagihan bulanan untuk penghuni yang sudah mendapatkan kamar.
+        </p>
+
+        <form id="formPembayaran">
+            <div class="room-form">
+                <select id="penghuniPembayaran" required>
+                    <option value="">Pilih penghuni</option>
+                </select>
+
+                <input type="number" id="jumlahPembayaran"
+                    placeholder="Jumlah tagihan"
+                    min="1" step="1" required>
+
+                <input type="month" id="bulanTagihan" required>
+            </div>
+
+            <button type="submit" class="save-button"
+                id="tombolPembayaran">
+                Buat Tagihan
+            </button>
+
+            <p id="pesanPembayaran"></p>
+        </form>
+
+        <h2 style="margin-top: 30px;">Daftar Tagihan dan Bukti Pembayaran</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama Penghuni</th>
+                        <th>Bulan Tagihan</th>
+                        <th>Jumlah</th>
+                        <th>Metode</th>
+                        <th>Bukti Pembayaran</th>
+                        <th>Status</th>
+                        <th>Tanggal Bayar</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody id="tabelPembayaranAdmin">
+                    <tr>
+                        <td colspan="8">Memuat data pembayaran...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Data Penghuni -->
+    <section class="content-card">
+        <h2>Data Penghuni</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>No. HP</th>
+                        <th>Alamat</th>
+                        <th>Tanggal Masuk</th>
+                    </tr>
+                </thead>
+
+                <tbody id="tabelPenghuni">
+                    <tr>
+                        <td colspan="4">Memuat data penghuni...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>
