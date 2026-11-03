@@ -1,17 +1,19 @@
-
-const loginButton = document.getElementById("loginButton");
-
-loginButton.addEventListener("click", function () {
-    alert("Fitur login RuangKos akan segera tersedia!");
-});
-
-
+```javascript
 import { supabase } from './supabase.js';
 
-console.log('Supabase siap digunakan!');
-console.log('Client:', supabase);
+// Tombol menuju halaman login
+const loginButton = document.getElementById("loginButton");
 
-// Tes membaca data dari Supabase
+if (loginButton) {
+    loginButton.addEventListener("click", function () {
+        window.location.href = "login.html";
+    });
+}
+
+// Memeriksa koneksi Supabase
+console.log('Supabase siap digunakan!');
+
+// Mengambil data kamar
 const { data, error } = await supabase
     .from('kamar')
     .select('*');
@@ -21,3 +23,4 @@ if (error) {
 } else {
     console.log('Berhasil membaca tabel kamar:', data);
 }
+```
