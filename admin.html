@@ -33,12 +33,9 @@
             color: #765c48;
         }
 
-        .admin-header h1 {
-            margin-bottom: 8px;
-        }
+        .admin-header h1 { margin-bottom: 8px; }
 
-        .logout-button,
-        .save-button {
+        .logout-button, .save-button {
             background: #a77b65;
             color: white;
             border: none;
@@ -47,8 +44,7 @@
             cursor: pointer;
         }
 
-        .logout-button:hover,
-        .save-button:hover {
+        .logout-button:hover, .save-button:hover {
             background: #89634f;
         }
 
@@ -64,8 +60,7 @@
             margin-bottom: 30px;
         }
 
-        .stat-card,
-        .content-card {
+        .stat-card, .content-card {
             background: white;
             padding: 22px;
             border-radius: 14px;
@@ -89,9 +84,7 @@
             overflow: hidden;
         }
 
-        .content-card h2 {
-            margin-bottom: 20px;
-        }
+        .content-card h2 { margin-bottom: 20px; }
 
         .room-form {
             display: grid;
@@ -100,8 +93,7 @@
             margin-bottom: 15px;
         }
 
-        .room-form input,
-        .room-form select {
+        .room-form input, .room-form select {
             width: 100%;
             padding: 12px;
             border: 1px solid #e4d8cd;
@@ -112,9 +104,7 @@
             font: inherit;
         }
 
-        .table-wrapper {
-            overflow-x: auto;
-        }
+        .table-wrapper { overflow-x: auto; }
 
         table {
             width: 100%;
@@ -135,10 +125,9 @@
             white-space: nowrap;
         }
 
-        .editKamar,
-        .hapusKamar,
-        .setujuiPembayaran,
-        .tolakPembayaran {
+        .editKamar, .hapusKamar,
+        .setujuiPembayaran, .tolakPembayaran,
+        .keluarkanPenghuni {
             color: white;
             border: none;
             padding: 8px 12px;
@@ -148,13 +137,13 @@
         }
 
         .editKamar { background: #b99a78; }
-        .hapusKamar { background: #c97878; }
+        .hapusKamar, .tolakPembayaran,
+        .keluarkanPenghuni { background: #c97878; }
         .setujuiPembayaran { background: #668b68; }
-        .tolakPembayaran { background: #c97878; }
 
         .editKamar:hover { background: #967653; }
-        .hapusKamar:hover,
-        .tolakPembayaran:hover { background: #ad5555; }
+        .hapusKamar:hover, .tolakPembayaran:hover,
+        .keluarkanPenghuni:hover { background: #ad5555; }
         .setujuiPembayaran:hover { background: #4d704f; }
 
         .info-text {
@@ -164,9 +153,7 @@
             margin-bottom: 18px;
         }
 
-        #pesanKamar,
-        #pesanPenetapan,
-        #pesanPembayaran {
+        #pesanKamar, #pesanPenetapan, #pesanPembayaran {
             margin-top: 12px;
             font-size: 14px;
         }
@@ -220,18 +207,21 @@
             white-space: normal;
         }
 
-        .aksi-pembayaran {
-            min-width: 150px;
+        .aksi-pembayaran { min-width: 150px; }
+
+        .filter-penghuni {
+            padding: 10px 12px;
+            border: 1px solid #e4d8cd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background: #fffdfb;
+            color: #51463d;
+            font: inherit;
         }
 
         @media (max-width: 600px) {
-            .admin-container {
-                padding: 12px;
-            }
-
-            .admin-header {
-                align-items: flex-start;
-            }
+            .admin-container { padding: 12px; }
+            .admin-header { align-items: flex-start; }
         }
     </style>
 </head>
@@ -244,72 +234,54 @@
             <h1>Dashboard Admin</h1>
             <p>Selamat datang di pengelolaan RuangKos!</p>
         </div>
-
-        <button class="logout-button" id="logoutButton">
-            Logout
-        </button>
+        <button class="logout-button" id="logoutButton">Logout</button>
     </header>
 
-    <!-- Statistik -->
+    <!-- STATISTIK -->
     <section class="stat-grid">
         <div class="stat-card">
             <h3>Total Kamar</h3>
             <p id="totalKamar">0</p>
         </div>
-
         <div class="stat-card">
             <h3>Kamar Tersedia</h3>
             <p id="kamarTersedia">0</p>
         </div>
-
         <div class="stat-card">
             <h3>Kamar Terisi</h3>
             <p id="kamarTerisi">0</p>
         </div>
-
         <div class="stat-card">
-            <h3>Total Penghuni</h3>
+            <h3>Total Penghuni Aktif</h3>
             <p id="totalPenghuni">0</p>
         </div>
     </section>
 
-    <!-- Tambah Kamar -->
+    <!-- TAMBAH KAMAR -->
     <section class="content-card">
         <h2>Tambah Data Kamar</h2>
-
         <form id="formKamar">
             <div class="room-form">
                 <input type="text" id="nomorKamar"
                     placeholder="Nomor Kamar" required>
-
                 <input type="text" id="tipeKamar"
                     placeholder="Tipe Kamar" required>
-
                 <input type="number" id="hargaKamar"
-                    placeholder="Harga Bulanan"
-                    min="1" step="1" required>
-
+                    placeholder="Harga Bulanan" min="1" required>
                 <select id="statusKamar" required>
-                    <option value="" disabled selected>
-                        Pilih Status Kamar
-                    </option>
+                    <option value="" disabled selected>Pilih Status Kamar</option>
                     <option value="tersedia">Tersedia</option>
                     <option value="terisi">Terisi</option>
                 </select>
             </div>
-
-            <button type="submit" class="save-button">
-                Simpan Kamar
-            </button>
-
+            <button type="submit" class="save-button">Simpan Kamar</button>
             <p id="pesanKamar"></p>
         </form>
     </section>
 
-    <!-- Data Kamar -->
+    <!-- DATA KAMAR -->
     <section class="content-card">
         <h2>Data Kamar</h2>
-
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -321,20 +293,16 @@
                         <th>Aksi</th>
                     </tr>
                 </thead>
-
                 <tbody id="tabelKamar">
-                    <tr>
-                        <td colspan="5">Memuat data kamar...</td>
-                    </tr>
+                    <tr><td colspan="5">Memuat data kamar...</td></tr>
                 </tbody>
             </table>
         </div>
     </section>
 
-    <!-- Penetapan Kamar -->
+    <!-- PENETAPAN KAMAR -->
     <section class="content-card">
         <h2>Penetapan Kamar Penghuni</h2>
-
         <p class="info-text">
             Pilih akun penghuni yang sudah mendaftar dan tentukan kamar yang tersedia.
         </p>
@@ -344,35 +312,25 @@
                 <select id="pilihPenghuni" required>
                     <option value="">Memuat akun penghuni...</option>
                 </select>
-
                 <select id="pilihKamar" required>
                     <option value="">Memuat kamar tersedia...</option>
                 </select>
-
-                <input type="text" id="noHpPenghuni"
-                    placeholder="Nomor HP">
-
-                <input type="text" id="alamatPenghuni"
-                    placeholder="Alamat penghuni">
-
+                <input type="text" id="noHpPenghuni" placeholder="Nomor HP">
+                <input type="text" id="alamatPenghuni" placeholder="Alamat penghuni">
                 <input type="date" id="tanggalMasuk" required>
             </div>
-
-            <button type="submit" class="save-button"
-                id="tombolPenetapan">
+            <button type="submit" class="save-button" id="tombolPenetapan">
                 Tetapkan Kamar
             </button>
-
             <p id="pesanPenetapan"></p>
         </form>
     </section>
 
-    <!-- Kelola Pembayaran -->
+    <!-- PEMBAYARAN -->
     <section class="content-card">
         <h2>Kelola Pembayaran</h2>
-
         <p class="info-text">
-            Buat tagihan bulanan untuk penghuni yang sudah mendapatkan kamar.
+            Buat tagihan bulanan untuk penghuni yang masih aktif.
         </p>
 
         <form id="formPembayaran">
@@ -380,24 +338,17 @@
                 <select id="penghuniPembayaran" required>
                     <option value="">Pilih penghuni</option>
                 </select>
-
                 <input type="number" id="jumlahPembayaran"
-                    placeholder="Jumlah tagihan"
-                    min="1" step="1" required>
-
+                    placeholder="Jumlah tagihan" min="1" required>
                 <input type="month" id="bulanTagihan" required>
             </div>
-
-            <button type="submit" class="save-button"
-                id="tombolPembayaran">
+            <button type="submit" class="save-button" id="tombolPembayaran">
                 Buat Tagihan
             </button>
-
             <p id="pesanPembayaran"></p>
         </form>
 
-        <h2 style="margin-top: 30px;">Daftar Tagihan dan Bukti Pembayaran</h2>
-
+        <h2 style="margin-top:30px;">Daftar Tagihan dan Bukti Pembayaran</h2>
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -412,19 +363,25 @@
                         <th>Aksi</th>
                     </tr>
                 </thead>
-
                 <tbody id="tabelPembayaranAdmin">
-                    <tr>
-                        <td colspan="8">Memuat data pembayaran...</td>
-                    </tr>
+                    <tr><td colspan="8">Memuat data pembayaran...</td></tr>
                 </tbody>
             </table>
         </div>
     </section>
 
-    <!-- Data Penghuni -->
+    <!-- DATA PENGHUNI -->
     <section class="content-card">
         <h2>Data Penghuni</h2>
+        <p class="info-text">
+            Kelola penghuni aktif dan lihat riwayat penghuni yang sudah keluar.
+        </p>
+
+        <select id="filterPenghuni" class="filter-penghuni">
+            <option value="semua">Semua Penghuni</option>
+            <option value="aktif">Penghuni Aktif</option>
+            <option value="keluar">Penghuni Keluar</option>
+        </select>
 
         <div class="table-wrapper">
             <table>
@@ -434,13 +391,15 @@
                         <th>No. HP</th>
                         <th>Alamat</th>
                         <th>Tanggal Masuk</th>
+                        <th>Kamar</th>
+                        <th>Status</th>
+                        <th>Tanggal Keluar</th>
+                        <th>Keterangan</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
-
                 <tbody id="tabelPenghuni">
-                    <tr>
-                        <td colspan="4">Memuat data penghuni...</td>
-                    </tr>
+                    <tr><td colspan="9">Memuat data penghuni...</td></tr>
                 </tbody>
             </table>
         </div>

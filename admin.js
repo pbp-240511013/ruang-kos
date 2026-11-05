@@ -1,8 +1,9 @@
+
 import { supabase } from './supabase.js';
 
-// ==================================
+// ========================================
 // 1. FUNGSI BANTU
-// ==================================
+// ========================================
 
 function escapeHTML(value) {
     return String(value ?? '').replace(/[&<>"']/g, karakter => ({
@@ -34,17 +35,21 @@ function formatBulan(value) {
 function tanggalHariIni() {
     const sekarang = new Date();
 
-    const tahun = sekarang.getFullYear();
-    const bulan = String(sekarang.getMonth() + 1).padStart(2, '0');
-    const hari = String(sekarang.getDate()).padStart(2, '0');
+    return [
+        sekarang.getFullYear(),
+        String(sekarang.getMonth() + 1).padStart(2, '0'),
+        String(sekarang.getDate()).padStart(2, '0')
+    ].join('-');
+}
 
-    return `${tahun}-${bulan}-${hari}`;
+function normalisasiStatus(status) {
+    return String(status || 'aktif').trim().toLowerCase();
 }
 
 
-// ==================================
+// ========================================
 // 2. MEMERIKSA AKSES ADMIN
-// ==================================
+// ========================================
 
 async function cekAdmin() {
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -73,9 +78,9 @@ async function cekAdmin() {
 }
 
 
-// ==================================
-// 3. MENAMPILKAN DATA KAMAR
-// ==================================
+// ========================================
+// 3. MEMUAT DATA KAMAR
+// ========================================
 
 async function muatKamar() {
     const tabel = document.getElementById('tabelKamar');
@@ -86,9 +91,8 @@ async function muatKamar() {
         .order('nomor_kamar');
 
     if (error) {
-        console.error('Gagal memuat kamar:', error.message);
         tabel.innerHTML =
-            `<tr><td colspan="5">Gagal memuat data kamar: ${escapeHTML(error.message)}</td></tr>`;
+            `<tr><td colspan="5">Gagal memuat: ${escapeHTML(error.message)}</td></tr>`;
         return;
     }
 
@@ -113,17 +117,11 @@ async function muatKamar() {
                 <td>${formatRupiah(item.harga_bulanan)}</td>
                 <td>${escapeHTML(item.status)}</td>
                 <td>
-                    <button type="button"
-                        class="editKamar"
-                        data-id="${escapeHTML(item.id)}">
-                        Edit
-                    </button>
+                    <button type="button" class="editKamar"
+                        data-id="${escapeHTML(item.id)}">Edit</button>
 
-                    <button type="button"
-                        class="hapusKamar"
-                        data-id="${escapeHTML(item.id)}">
-                        Hapus
-                    </button>
+                    <button type="button" class="hapusKamar"
+                        data-id="${escapeHTML(item.id)}">Hapus</button>
                 </td>
             </tr>
         `).join('');
@@ -133,12 +131,13 @@ async function muatKamar() {
 }
 
 
-// ==================================
-// 4. MENAMPILKAN DATA PENGHUNI
-// ==================================
+// ========================================
+// 4. MEMUAT DATA PENGHUNI
+// ========================================
 
 async function muatPenghuni() {
     const tabel = document.getElementById('tabelPenghuni');
+    const filter = document.getElementById('filterPenghuni').value;
 
     const { data, error } = await supabase
         .from('penghuni')
@@ -146,44 +145,109 @@ async function muatPenghuni() {
         .order('nama');
 
     if (error) {
-        console.error('Gagal memuat penghuni:', error.message);
         tabel.innerHTML =
-            `<tr><td colspan="4">Gagal memuat data penghuni: ${escapeHTML(error.message)}</td></tr>`;
+            `<tr><td colspan="9">Gagal memuat: ${escapeHTML(error.message)}</td></tr>`;
         return;
     }
 
-    const penghuni = data || [];
+    const semuaPenghuni = data || [];
+
+    const penghuniAktif = semuaPenghuni.filter(
+        item => normalisasiStatus(item.status) === 'aktif'
+    );
 
     document.getElementById('totalPenghuni').textContent =
-        penghuni.length;
+        penghuniAktif.length;
+
+    // Mengambil nomor kamar
+    const kamarIds = [...new Set(
+        semuaPenghuni.map(item => item.kamar_id).filter(Boolean)
+    )];
+
+    let daftarKamar = [];
+
+    if (kamarIds.length > 0) {
+        const { data: kamar, error: kamarError } = await supabase
+            .from('kamar')
+            .select('id, nomor_kamar')
+            .in('id', kamarIds);
+
+        if (!kamarError) daftarKamar = kamar || [];
+    }
+
+    const nomorKamar = new Map(
+        daftarKamar.map(item => [
+            String(item.id),
+            item.nomor_kamar
+        ])
+    );
+
+    // Filter penghuni
+    let penghuni = semuaPenghuni;
+
+    if (filter === 'aktif') {
+        penghuni = semuaPenghuni.filter(
+            item => normalisasiStatus(item.status) === 'aktif'
+        );
+    } else if (filter === 'keluar') {
+        penghuni = semuaPenghuni.filter(
+            item => normalisasiStatus(item.status) === 'keluar'
+        );
+    }
 
     if (penghuni.length === 0) {
         tabel.innerHTML =
-            '<tr><td colspan="4">Belum ada data penghuni.</td></tr>';
+            '<tr><td colspan="9">Tidak ada data penghuni.</td></tr>';
         return;
     }
 
-    tabel.innerHTML = penghuni.map(item => `
-        <tr>
-            <td>${escapeHTML(item.nama)}</td>
-            <td>${escapeHTML(item.no_hp || '-')}</td>
-            <td>${escapeHTML(item.alamat || '-')}</td>
-            <td>${escapeHTML(item.tanggal_masuk || '-')}</td>
-        </tr>
-    `).join('');
+    tabel.innerHTML = penghuni.map(item => {
+        const aktif = normalisasiStatus(item.status) === 'aktif';
+
+        return `
+            <tr>
+                <td>${escapeHTML(item.nama)}</td>
+                <td>${escapeHTML(item.no_hp || '-')}</td>
+                <td>${escapeHTML(item.alamat || '-')}</td>
+                <td>${escapeHTML(item.tanggal_masuk || '-')}</td>
+                <td>${escapeHTML(nomorKamar.get(String(item.kamar_id)) || '-')}</td>
+
+                <td>
+                    <span class="status-label ${
+                        aktif ? 'status-lunas' : 'status-ditolak'
+                    }">
+                        ${aktif ? 'Aktif' : 'Keluar'}
+                    </span>
+                </td>
+
+                <td>${escapeHTML(item.tanggal_keluar || '-')}</td>
+
+                <td>${escapeHTML(item.keterangan_keluar || '-')}</td>
+
+                <td>
+                    ${
+                        aktif
+                        ? `<button type="button"
+                            class="keluarkanPenghuni"
+                            data-id="${escapeHTML(item.id)}"
+                            data-nama="${escapeHTML(item.nama)}">
+                            Pindah/Keluarkan
+                           </button>`
+                        : '<span class="status-label">Selesai</span>'
+                    }
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 
-// ==================================
+// ========================================
 // 5. MEMUAT AKUN PENGHUNI
-//    YANG BELUM MENDAPAT KAMAR
-// ==================================
+// ========================================
 
 async function muatAkunPenghuni() {
     const pilihan = document.getElementById('pilihPenghuni');
-
-    pilihan.innerHTML =
-        '<option value="">Memuat akun penghuni...</option>';
 
     const { data: profiles, error: profileError } = await supabase
         .from('profiles')
@@ -192,7 +256,6 @@ async function muatAkunPenghuni() {
         .order('nama');
 
     if (profileError) {
-        console.error(profileError.message);
         pilihan.innerHTML =
             '<option value="">Gagal memuat akun penghuni</option>';
         return;
@@ -200,21 +263,22 @@ async function muatAkunPenghuni() {
 
     const { data: penghuni, error: penghuniError } = await supabase
         .from('penghuni')
-        .select('user_id');
+        .select('user_id, status');
 
     if (penghuniError) {
-        console.error(penghuniError.message);
         pilihan.innerHTML =
-            '<option value="">Gagal memeriksa data penghuni</option>';
+            '<option value="">Gagal memeriksa penghuni</option>';
         return;
     }
 
-    const sudahTerdaftar = new Set(
-        (penghuni || []).map(item => item.user_id)
+    const akunAktif = new Set(
+        (penghuni || [])
+            .filter(item => normalisasiStatus(item.status) === 'aktif')
+            .map(item => item.user_id)
     );
 
     const belumMendapatKamar = (profiles || []).filter(
-        item => !sudahTerdaftar.has(item.id)
+        item => !akunAktif.has(item.id)
     );
 
     if (belumMendapatKamar.length === 0) {
@@ -233,9 +297,9 @@ async function muatAkunPenghuni() {
 }
 
 
-// ==================================
-// 6. MEMUAT PILIHAN KAMAR TERSEDIA
-// ==================================
+// ========================================
+// 6. MEMUAT KAMAR TERSEDIA
+// ========================================
 
 async function muatPilihanKamar() {
     const pilihan = document.getElementById('pilihKamar');
@@ -247,7 +311,6 @@ async function muatPilihanKamar() {
         .order('nomor_kamar');
 
     if (error) {
-        console.error(error.message);
         pilihan.innerHTML =
             '<option value="">Gagal memuat kamar</option>';
         return;
@@ -271,9 +334,9 @@ async function muatPilihanKamar() {
 }
 
 
-// ==================================
+// ========================================
 // 7. MENAMBAHKAN KAMAR
-// ==================================
+// ========================================
 
 document.getElementById('formKamar').addEventListener(
     'submit',
@@ -289,16 +352,14 @@ document.getElementById('formKamar').addEventListener(
         const harga = Number(document.getElementById('hargaKamar').value);
         const status = document.getElementById('statusKamar').value;
 
-        if (!nomor || !tipe || !Number.isFinite(harga) ||
-            harga <= 0 || !status) {
+        if (!nomor || !tipe || harga <= 0 || !status) {
             pesan.style.color = 'red';
             pesan.textContent = 'Periksa kembali data kamar.';
             return;
         }
 
         tombol.disabled = true;
-        pesan.style.color = '#765c48';
-        pesan.textContent = 'Menyimpan data kamar...';
+        pesan.textContent = 'Menyimpan kamar...';
 
         try {
             const { error } = await supabase
@@ -321,7 +382,6 @@ document.getElementById('formKamar').addEventListener(
         } catch (error) {
             pesan.style.color = 'red';
             pesan.textContent = 'Gagal menyimpan: ' + error.message;
-
         } finally {
             tombol.disabled = false;
         }
@@ -329,46 +389,41 @@ document.getElementById('formKamar').addEventListener(
 );
 
 
-// ==================================
-// 8. MENGEDIT DATA KAMAR
-// ==================================
+// ========================================
+// 8. MENGEDIT KAMAR
+// ========================================
 
 document.getElementById('tabelKamar').addEventListener(
     'click',
     async function(event) {
         const tombol = event.target.closest('.editKamar');
-
         if (!tombol) return;
 
-        const id = tombol.dataset.id;
-
-        const { data: kamar, error: ambilError } = await supabase
+        const { data: kamar, error } = await supabase
             .from('kamar')
             .select('*')
-            .eq('id', id)
+            .eq('id', tombol.dataset.id)
             .single();
 
-        if (ambilError) {
-            alert('Gagal mengambil data kamar: ' + ambilError.message);
+        if (error) {
+            alert(error.message);
             return;
         }
 
-        const nomor = prompt('Masukkan nomor kamar:', kamar.nomor_kamar);
+        const nomor = prompt('Nomor kamar:', kamar.nomor_kamar);
         if (nomor === null) return;
 
-        const tipe = prompt('Masukkan tipe kamar:', kamar.tipe_kamar);
+        const tipe = prompt('Tipe kamar:', kamar.tipe_kamar);
         if (tipe === null) return;
 
-        const hargaInput = prompt(
-            'Masukkan harga bulanan:',
-            kamar.harga_bulanan
-        );
+        const hargaInput = prompt('Harga bulanan:', kamar.harga_bulanan);
         if (hargaInput === null) return;
 
         const status = prompt(
-            'Masukkan status (tersedia atau terisi):',
+            'Status (tersedia/terisi):',
             kamar.status
         );
+
         if (status === null) return;
 
         const harga = Number(hargaInput);
@@ -381,11 +436,11 @@ document.getElementById('tabelKamar').addEventListener(
             harga <= 0 ||
             !['tersedia', 'terisi'].includes(statusBaru)
         ) {
-            alert('Data tidak valid. Silakan periksa kembali.');
+            alert('Data kamar tidak valid.');
             return;
         }
 
-        const { error } = await supabase
+        const { error: updateError } = await supabase
             .from('kamar')
             .update({
                 nomor_kamar: nomor.trim(),
@@ -393,10 +448,10 @@ document.getElementById('tabelKamar').addEventListener(
                 harga_bulanan: harga,
                 status: statusBaru
             })
-            .eq('id', id);
+            .eq('id', kamar.id);
 
-        if (error) {
-            alert('Gagal mengedit kamar: ' + error.message);
+        if (updateError) {
+            alert('Gagal mengedit: ' + updateError.message);
             return;
         }
 
@@ -406,32 +461,33 @@ document.getElementById('tabelKamar').addEventListener(
 );
 
 
-// ==================================
-// 9. MENGHAPUS DATA KAMAR
-// ==================================
+// ========================================
+// 9. MENGHAPUS KAMAR
+// ========================================
 
 document.getElementById('tabelKamar').addEventListener(
     'click',
     async function(event) {
         const tombol = event.target.closest('.hapusKamar');
-
         if (!tombol) return;
-
-        const id = tombol.dataset.id;
 
         const yakin = confirm('Yakin ingin menghapus kamar ini?');
         if (!yakin) return;
 
-        tombol.disabled = true;
-
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('kamar')
             .delete()
-            .eq('id', id);
+            .eq('id', tombol.dataset.id)
+            .eq('status', 'tersedia')
+            .select('id');
 
         if (error) {
             alert('Gagal menghapus kamar: ' + error.message);
-            tombol.disabled = false;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            alert('Kamar tidak bisa dihapus karena sedang terisi atau tidak ditemukan.');
             return;
         }
 
@@ -441,9 +497,9 @@ document.getElementById('tabelKamar').addEventListener(
 );
 
 
-// ==================================
-// 10. MENETAPKAN KAMAR UNTUK PENGHUNI
-// ==================================
+// ========================================
+// 10. MENETAPKAN KAMAR
+// ========================================
 
 document.getElementById('formPenetapan').addEventListener(
     'submit',
@@ -462,17 +518,15 @@ document.getElementById('formPenetapan').addEventListener(
 
         if (!userId || !kamarId || !tanggalMasuk) {
             pesan.style.color = 'red';
-            pesan.textContent =
-                'Pilih penghuni, kamar, dan tanggal masuk.';
+            pesan.textContent = 'Lengkapi data penetapan kamar.';
             return;
         }
 
         tombol.disabled = true;
-        pesan.style.color = '#765c48';
         pesan.textContent = 'Sedang menetapkan kamar...';
 
         let kamarSudahDikunci = false;
-        let penghuniBaruId = null;
+        let penghuniBerhasilDisimpan = false;
 
         try {
             const { data: profile, error: profileError } = await supabase
@@ -484,22 +538,27 @@ document.getElementById('formPenetapan').addEventListener(
             if (profileError) throw profileError;
 
             if (!profile || profile.role !== 'penghuni') {
-                throw new Error('Akun yang dipilih bukan akun penghuni.');
+                throw new Error('Akun bukan akun penghuni.');
             }
 
-            const { data: dataLama, error: cekPenghuniError } =
-                await supabase
-                    .from('penghuni')
-                    .select('id')
-                    .eq('user_id', userId);
+            const { data: dataLama, error: cekError } = await supabase
+                .from('penghuni')
+                .select('id, status, tanggal_masuk')
+                .eq('user_id', userId)
+                .order('tanggal_masuk', { ascending: false });
 
-            if (cekPenghuniError) throw cekPenghuniError;
+            if (cekError) throw cekError;
 
-            if (dataLama && dataLama.length > 0) {
-                throw new Error('Akun ini sudah memiliki data penghuni.');
+            const aktif = (dataLama || []).find(
+                item => normalisasiStatus(item.status) === 'aktif'
+            );
+
+            if (aktif) {
+                throw new Error('Akun ini masih memiliki kamar aktif.');
             }
 
-            const { data: kamarDiperbarui, error: updateKamarError } =
+            // Mengunci kamar agar tidak dipilih penghuni lain.
+            const { data: kamarDiperbarui, error: kamarError } =
                 await supabase
                     .from('kamar')
                     .update({ status: 'terisi' })
@@ -507,32 +566,58 @@ document.getElementById('formPenetapan').addEventListener(
                     .eq('status', 'tersedia')
                     .select('id');
 
-            if (updateKamarError) throw updateKamarError;
+            if (kamarError) throw kamarError;
 
             if (!kamarDiperbarui || kamarDiperbarui.length === 0) {
-                throw new Error(
-                    'Kamar sudah tidak tersedia. Silakan pilih kamar lain.'
-                );
+                throw new Error('Kamar sudah tidak tersedia.');
             }
 
             kamarSudahDikunci = true;
 
-            const { data: dataPenghuni, error: insertError } = await supabase
-                .from('penghuni')
-                .insert([{
-                    user_id: userId,
-                    kamar_id: kamarId,
-                    nama: profile.nama,
-                    no_hp: noHp || null,
-                    alamat: alamat || null,
-                    tanggal_masuk: tanggalMasuk
-                }])
-                .select('id')
-                .single();
+            // Jika pernah keluar, gunakan kembali data penghuni terakhir.
+            if (dataLama && dataLama.length > 0) {
+                const riwayatTerakhir = dataLama[0];
 
-            if (insertError) throw insertError;
+                const { error: updatePenghuniError } = await supabase
+                    .from('penghuni')
+                    .update({
+                        kamar_id: kamarId,
+                        nama: profile.nama,
+                        no_hp: noHp || null,
+                        alamat: alamat || null,
+                        tanggal_masuk: tanggalMasuk,
+                        tanggal_keluar: null,
+                        keterangan_keluar: null,
+                        status: 'aktif'
+                    })
+                    .eq('id', riwayatTerakhir.id);
 
-            penghuniBaruId = dataPenghuni.id;
+                if (updatePenghuniError) throw updatePenghuniError;
+
+            } else {
+                const { error: insertError } = await supabase
+                    .from('penghuni')
+                    .insert([{
+                        user_id: userId,
+                        kamar_id: kamarId,
+                        nama: profile.nama,
+                        no_hp: noHp || null,
+                        alamat: alamat || null,
+                        tanggal_masuk: tanggalMasuk,
+                        status: 'aktif'
+                    }]);
+
+                if (insertError) throw insertError;
+            }
+
+            penghuniBerhasilDisimpan = true;
+
+            const { error: aksesError } = await supabase
+                .from('profiles')
+                .update({ akses_diblokir: false })
+                .eq('id', userId);
+
+            if (aksesError) throw aksesError;
 
             pesan.style.color = 'green';
             pesan.textContent =
@@ -548,18 +633,11 @@ document.getElementById('formPenetapan').addEventListener(
             ]);
 
         } catch (error) {
-            if (kamarSudahDikunci && !penghuniBaruId) {
-                const { error: rollbackError } = await supabase
+            if (kamarSudahDikunci && !penghuniBerhasilDisimpan) {
+                await supabase
                     .from('kamar')
                     .update({ status: 'tersedia' })
                     .eq('id', kamarId);
-
-                if (rollbackError) {
-                    console.error(
-                        'Gagal mengembalikan status kamar:',
-                        rollbackError.message
-                    );
-                }
             }
 
             pesan.style.color = 'red';
@@ -578,35 +656,37 @@ document.getElementById('formPenetapan').addEventListener(
 );
 
 
-// ==================================
-// 11. MEMUAT PILIHAN PENGHUNI
-//     UNTUK TAGIHAN
-// ==================================
+// ========================================
+// 11. PILIHAN PENGHUNI UNTUK TAGIHAN
+// ========================================
 
 async function muatPilihanPenghuniPembayaran() {
     const pilihan = document.getElementById('penghuniPembayaran');
 
     const { data, error } = await supabase
         .from('penghuni')
-        .select('id, nama')
+        .select('id, nama, status')
         .order('nama');
 
     if (error) {
-        console.error(error.message);
         pilihan.innerHTML =
             '<option value="">Gagal memuat penghuni</option>';
         return;
     }
 
-    if (!data || data.length === 0) {
+    const penghuniAktif = (data || []).filter(
+        item => normalisasiStatus(item.status) === 'aktif'
+    );
+
+    if (penghuniAktif.length === 0) {
         pilihan.innerHTML =
-            '<option value="">Belum ada penghuni</option>';
+            '<option value="">Belum ada penghuni aktif</option>';
         return;
     }
 
     pilihan.innerHTML =
         '<option value="">Pilih penghuni</option>' +
-        data.map(item => `
+        penghuniAktif.map(item => `
             <option value="${escapeHTML(item.id)}">
                 ${escapeHTML(item.nama)}
             </option>
@@ -614,9 +694,9 @@ async function muatPilihanPenghuniPembayaran() {
 }
 
 
-// ==================================
+// ========================================
 // 12. MEMBUAT TAGIHAN
-// ==================================
+// ========================================
 
 document.getElementById('formPembayaran').addEventListener(
     'submit',
@@ -644,13 +724,11 @@ document.getElementById('formPembayaran').addEventListener(
         }
 
         tombol.disabled = true;
-        pesan.style.color = '#765c48';
         pesan.textContent = 'Menyimpan tagihan...';
 
         try {
-            const bulanTanggal = `${bulan}-01`;
+            const bulanTanggal = bulan + '-01';
 
-            // Cegah tagihan ganda untuk penghuni dan bulan yang sama.
             const { data: tagihanLama, error: cekError } = await supabase
                 .from('pembayaran')
                 .select('id')
@@ -660,9 +738,7 @@ document.getElementById('formPembayaran').addEventListener(
             if (cekError) throw cekError;
 
             if (tagihanLama && tagihanLama.length > 0) {
-                throw new Error(
-                    'Tagihan untuk penghuni dan bulan tersebut sudah ada.'
-                );
+                throw new Error('Tagihan bulan tersebut sudah ada.');
             }
 
             const { error } = await supabase
@@ -685,9 +761,7 @@ document.getElementById('formPembayaran').addEventListener(
 
         } catch (error) {
             pesan.style.color = 'red';
-            pesan.textContent =
-                'Gagal membuat tagihan: ' + error.message;
-
+            pesan.textContent = 'Gagal membuat tagihan: ' + error.message;
         } finally {
             tombol.disabled = false;
         }
@@ -695,10 +769,9 @@ document.getElementById('formPembayaran').addEventListener(
 );
 
 
-// ==================================
-// 13. MENAMPILKAN DAFTAR TAGIHAN
-//     TERMASUK BUKTI PEMBAYARAN
-// ==================================
+// ========================================
+// 13. MENAMPILKAN PEMBAYARAN
+// ========================================
 
 async function muatPembayaran() {
     const tabel = document.getElementById('tabelPembayaranAdmin');
@@ -712,16 +785,8 @@ async function muatPembayaran() {
         .order('bulan_tagihan', { ascending: false });
 
     if (error) {
-        console.error('Gagal memuat pembayaran:', error.message);
-
-        tabel.innerHTML = `
-            <tr>
-                <td colspan="8">
-                    Gagal memuat pembayaran:
-                    ${escapeHTML(error.message)}
-                </td>
-            </tr>
-        `;
+        tabel.innerHTML =
+            `<tr><td colspan="8">Gagal memuat: ${escapeHTML(error.message)}</td></tr>`;
         return;
     }
 
@@ -736,8 +801,6 @@ async function muatPembayaran() {
         .select('id, nama');
 
     if (penghuniError) {
-        console.error(penghuniError.message);
-
         tabel.innerHTML =
             '<tr><td colspan="8">Gagal memuat nama penghuni.</td></tr>';
         return;
@@ -755,47 +818,37 @@ async function muatPembayaran() {
             const nama =
                 namaPenghuni.get(String(item.penghuni_id)) || 'Penghuni';
 
-            let tampilanBukti = '<span>Belum ada bukti</span>';
+            let bukti = '<span>Belum ada bukti</span>';
 
-            // Buat URL sementara untuk file di bucket privat.
             if (item.bukti_pembayaran) {
                 const { data: file, error: fileError } =
                     await supabase.storage
                         .from('bukti-pembayaran')
                         .createSignedUrl(item.bukti_pembayaran, 300);
 
-                if (fileError) {
-                    console.error(
-                        'Gagal membuka bukti pembayaran:',
-                        fileError.message
-                    );
-
-                    tampilanBukti =
-                        '<span>Gagal memuat bukti</span>';
-                } else if (file?.signedUrl) {
+                if (!fileError && file?.signedUrl) {
                     const url = escapeHTML(file.signedUrl);
 
-                    tampilanBukti = `
+                    bukti = `
                         <a href="${url}" target="_blank"
-                            rel="noopener noreferrer"
-                            class="bukti-link"
-                            title="Klik untuk melihat bukti ukuran penuh">
-                            <img src="${url}"
-                                class="bukti-preview"
+                            rel="noopener noreferrer" class="bukti-link">
+                            <img src="${url}" class="bukti-preview"
                                 alt="Bukti pembayaran">
                             <br>Lihat bukti
                         </a>
                     `;
+                } else {
+                    bukti = '<span>Gagal memuat bukti</span>';
                 }
             }
 
-            let statusTeks = 'Belum Dibayar';
-            let statusClass = '';
-            let aksi = ' - ';
+            let status = 'Belum Dibayar';
+            let kelas = '';
+            let aksi = 'Menunggu pembayaran';
 
             if (item.status === 'menunggu_verifikasi') {
-                statusTeks = 'Menunggu Verifikasi';
-                statusClass = 'status-menunggu';
+                status = 'Menunggu Verifikasi';
+                kelas = 'status-menunggu';
 
                 aksi = `
                     <div class="aksi-pembayaran">
@@ -814,18 +867,14 @@ async function muatPembayaran() {
                 `;
 
             } else if (item.status === 'lunas') {
-                statusTeks = 'Lunas';
-                statusClass = 'status-lunas';
+                status = 'Lunas';
+                kelas = 'status-lunas';
                 aksi = 'Selesai';
 
             } else if (item.status === 'ditolak') {
-                statusTeks = 'Ditolak';
-                statusClass = 'status-ditolak';
+                status = 'Ditolak';
+                kelas = 'status-ditolak';
                 aksi = 'Menunggu kirim ulang';
-
-            } else if (item.status === 'belum_bayar') {
-                statusTeks = 'Belum Dibayar';
-                aksi = 'Menunggu pembayaran';
             }
 
             const alasan = item.catatan_verifikasi
@@ -837,28 +886,17 @@ async function muatPembayaran() {
             return `
                 <tr>
                     <td>${escapeHTML(nama)}</td>
-
-                    <td>
-                        ${escapeHTML(formatBulan(item.bulan_tagihan))}
-                    </td>
-
+                    <td>${escapeHTML(formatBulan(item.bulan_tagihan))}</td>
                     <td>${formatRupiah(item.jumlah)}</td>
-
+                    <td>${escapeHTML(item.metode_pembayaran || '-')}</td>
+                    <td>${bukti}</td>
                     <td>
-                        ${escapeHTML(item.metode_pembayaran || '-')}
-                    </td>
-
-                    <td>${tampilanBukti}</td>
-
-                    <td>
-                        <span class="status-label ${statusClass}">
-                            ${statusTeks}
+                        <span class="status-label ${kelas}">
+                            ${status}
                         </span>
                         ${alasan}
                     </td>
-
                     <td>${escapeHTML(item.tanggal_bayar || '-')}</td>
-
                     <td>${aksi}</td>
                 </tr>
             `;
@@ -869,65 +907,34 @@ async function muatPembayaran() {
 }
 
 
-// ==================================
-// 14. MENYETUJUI ATAU MENOLAK
-//     PEMBAYARAN
-// ==================================
+// ========================================
+// 14. VERIFIKASI PEMBAYARAN
+// ========================================
 
 document.getElementById('tabelPembayaranAdmin').addEventListener(
     'click',
     async function(event) {
-        const tombolSetuju = event.target.closest('.setujuiPembayaran');
-        const tombolTolak = event.target.closest('.tolakPembayaran');
+        const setuju = event.target.closest('.setujuiPembayaran');
+        const tolak = event.target.closest('.tolakPembayaran');
 
-        if (!tombolSetuju && !tombolTolak) return;
+        if (!setuju && !tolak) return;
 
-        const tombol = tombolSetuju || tombolTolak;
+        const tombol = setuju || tolak;
         const id = tombol.dataset.id;
 
-        if (tombolSetuju) {
-            const yakin = confirm(
-                'Apakah bukti pembayaran ini sudah benar dan pembayaran diterima?'
-            );
+        let updateData;
 
-            if (!yakin) return;
+        if (setuju) {
+            if (!confirm('Setujui pembayaran ini?')) return;
 
-            tombol.disabled = true;
+            updateData = {
+                status: 'lunas',
+                tanggal_bayar: tanggalHariIni(),
+                catatan_verifikasi: null
+            };
 
-            const { data, error } = await supabase
-                .from('pembayaran')
-                .update({
-                    status: 'lunas',
-                    tanggal_bayar: tanggalHariIni(),
-                    catatan_verifikasi: null
-                })
-                .eq('id', id)
-                .eq('status', 'menunggu_verifikasi')
-                .select('id');
-
-            if (error) {
-                alert('Gagal menyetujui pembayaran: ' + error.message);
-                tombol.disabled = false;
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                alert(
-                    'Pembayaran tidak dapat diproses. Statusnya mungkin sudah berubah.'
-                );
-                await muatPembayaran();
-                return;
-            }
-
-            alert('Pembayaran berhasil disetujui!');
-            await muatPembayaran();
-            return;
-        }
-
-        if (tombolTolak) {
-            const alasan = prompt(
-                'Masukkan alasan penolakan pembayaran:'
-            );
+        } else {
+            const alasan = prompt('Masukkan alasan penolakan:');
 
             if (alasan === null) return;
 
@@ -936,49 +943,203 @@ document.getElementById('tabelPembayaranAdmin').addEventListener(
                 return;
             }
 
-            const yakin = confirm(
-                'Yakin ingin menolak bukti pembayaran ini?'
-            );
+            if (!confirm('Yakin ingin menolak pembayaran ini?')) return;
 
-            if (!yakin) return;
+            updateData = {
+                status: 'ditolak',
+                catatan_verifikasi: alasan.trim(),
+                tanggal_bayar: null
+            };
+        }
 
-            tombol.disabled = true;
+        tombol.disabled = true;
 
-            const { data, error } = await supabase
-                .from('pembayaran')
+        const { data, error } = await supabase
+            .from('pembayaran')
+            .update(updateData)
+            .eq('id', id)
+            .eq('status', 'menunggu_verifikasi')
+            .select('id');
+
+        if (error) {
+            alert('Gagal memproses pembayaran: ' + error.message);
+            tombol.disabled = false;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            alert('Status pembayaran sudah berubah.');
+            await muatPembayaran();
+            return;
+        }
+
+        alert(setuju
+            ? 'Pembayaran berhasil disetujui!'
+            : 'Pembayaran berhasil ditolak.');
+
+        await muatPembayaran();
+    }
+);
+
+
+// ========================================
+// 15. PENGHUNI PINDAH / KELUAR
+// ========================================
+
+document.getElementById('tabelPenghuni').addEventListener(
+    'click',
+    async function(event) {
+        const tombol = event.target.closest('.keluarkanPenghuni');
+        if (!tombol) return;
+
+        const id = tombol.dataset.id;
+        const nama = tombol.dataset.nama;
+
+        // Meminta tanggal keluar
+        const tanggalKeluar = prompt(
+            `Tanggal keluar ${nama} (YYYY-MM-DD):`,
+            tanggalHariIni()
+        );
+
+        if (tanggalKeluar === null) return;
+
+        // Validasi format tanggal
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(tanggalKeluar)) {
+            alert('Format tanggal harus YYYY-MM-DD.');
+            return;
+        }
+
+        const [tahun, bulan, hari] =
+            tanggalKeluar.split('-').map(Number);
+
+        const tanggalValid = new Date(tahun, bulan - 1, hari);
+
+        if (
+            tanggalValid.getFullYear() !== tahun ||
+            tanggalValid.getMonth() !== bulan - 1 ||
+            tanggalValid.getDate() !== hari
+        ) {
+            alert('Tanggal keluar tidak valid.');
+            return;
+        }
+
+        // Meminta keterangan
+        const keterangan = prompt(
+            'Keterangan keluar (contoh: pindah kos atau selesai sewa):'
+        );
+
+        if (keterangan === null) return;
+
+        if (!confirm(
+            `Yakin mengeluarkan ${nama}? Kamar akan dikosongkan dan akses akun diblokir.`
+        )) return;
+
+        tombol.disabled = true;
+
+        try {
+            // Mengambil data penghuni
+            const { data: penghuni, error: ambilError } = await supabase
+                .from('penghuni')
+                .select('id, user_id, kamar_id, status')
+                .eq('id', id)
+                .single();
+
+            if (ambilError) throw ambilError;
+
+            if (normalisasiStatus(penghuni.status) !== 'aktif') {
+                throw new Error('Penghuni sudah berstatus keluar.');
+            }
+
+            // 1. Mengubah status penghuni
+            const { data: hasilUpdate, error: updateError } = await supabase
+                .from('penghuni')
                 .update({
-                    status: 'ditolak',
-                    catatan_verifikasi: alasan.trim(),
-                    tanggal_bayar: null
+                    status: 'keluar',
+                    tanggal_keluar: tanggalKeluar,
+                    keterangan_keluar: keterangan.trim() || null
                 })
                 .eq('id', id)
-                .eq('status', 'menunggu_verifikasi')
+                .eq('status', 'aktif')
                 .select('id');
 
-            if (error) {
-                alert('Gagal menolak pembayaran: ' + error.message);
-                tombol.disabled = false;
-                return;
-            }
+            if (updateError) throw updateError;
 
-            if (!data || data.length === 0) {
-                alert(
-                    'Pembayaran tidak dapat diproses. Statusnya mungkin sudah berubah.'
+            if (!hasilUpdate || hasilUpdate.length === 0) {
+                throw new Error(
+                    'Data penghuni sudah berubah atau tidak dapat diperbarui.'
                 );
-                await muatPembayaran();
-                return;
             }
 
-            alert('Pembayaran berhasil ditolak.');
-            await muatPembayaran();
+            // 2. Mengosongkan kamar
+            if (penghuni.kamar_id) {
+                const { error: kamarError } = await supabase
+                    .from('kamar')
+                    .update({ status: 'tersedia' })
+                    .eq('id', penghuni.kamar_id);
+
+                if (kamarError) {
+                    throw new Error(
+                        'Status penghuni sudah keluar, tetapi kamar gagal diperbarui: ' +
+                        kamarError.message
+                    );
+                }
+            }
+
+            // 3. Memblokir akses akun
+            if (penghuni.user_id) {
+                const { error: blokirError } = await supabase
+                    .from('profiles')
+                    .update({ akses_diblokir: true })
+                    .eq('id', penghuni.user_id);
+
+                if (blokirError) {
+                    throw new Error(
+                        'Status penghuni sudah keluar, tetapi pemblokiran akun gagal: ' +
+                        blokirError.message
+                    );
+                }
+            }
+
+            alert(
+                `${nama} berhasil dikeluarkan. Riwayat penghuni tetap tersimpan.`
+            );
+
+            await Promise.all([
+                muatKamar(),
+                muatPenghuni(),
+                muatAkunPenghuni(),
+                muatPilihanPenghuniPembayaran()
+            ]);
+
+        } catch (error) {
+            alert('Gagal memproses: ' + error.message);
+
+            await Promise.all([
+                muatKamar(),
+                muatPenghuni(),
+                muatAkunPenghuni()
+            ]);
+
+        } finally {
+            tombol.disabled = false;
         }
     }
 );
 
 
-// ==================================
-// 15. LOGOUT ADMIN
-// ==================================
+// ========================================
+// 16. FILTER DATA PENGHUNI
+// ========================================
+
+document.getElementById('filterPenghuni').addEventListener(
+    'change',
+    muatPenghuni
+);
+
+
+// ========================================
+// 17. LOGOUT ADMIN
+// ========================================
 
 document.getElementById('logoutButton').addEventListener(
     'click',
@@ -995,9 +1156,9 @@ document.getElementById('logoutButton').addEventListener(
 );
 
 
-// ==================================
-// 16. MENJALANKAN DASHBOARD
-// ==================================
+// ========================================
+// 18. MENJALANKAN DASHBOARD
+// ========================================
 
 const adminValid = await cekAdmin();
 
